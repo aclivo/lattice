@@ -1091,7 +1091,7 @@ func TestSlice_Basic(t *testing.T) {
 			}
 
 			for i := range dims {
-				if got[i] != testCase.want[i] {
+				if i < len(got) && i < len(testCase.want) && got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}

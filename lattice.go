@@ -203,11 +203,7 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 func (a Addr) IsZero() bool {
 	coords, dims := a.Coords()
 	for i := range dims {
-		if i >= len(coords) {
-			return false
-		}
-
-		if coords[i] != 0 {
+		if i < len(coords) && coords[i] != 0 {
 			return false
 		}
 	}
