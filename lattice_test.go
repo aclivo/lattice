@@ -206,12 +206,13 @@ func TestCoords_MaxCapacity(t *testing.T) {
 		t.Errorf("dims = %d, want %d", dims, MaxDimensions)
 	}
 
-	for i := range dims {
-		if i >= len(got) {
+	for dimIx := range dims {
+		if dimIx >= len(got) {
 			t.Fatalf("index out of range")
 		}
-		if got[i] != MaxCoordValue {
-			t.Errorf("coord[%d] = %d, want %d", i, got[i], MaxCoordValue)
+
+		if got[dimIx] != MaxCoordValue {
+			t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], MaxCoordValue)
 		}
 	}
 }
@@ -719,9 +720,13 @@ func TestAppend_Chaining(t *testing.T) {
 		t.Fatalf("dims = %d, want %d", dims, len(want))
 	}
 
-	for i := range dims {
-		if got[i] != want[i] {
-			t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
+	for dimIx := range dims {
+		if dimIx >= len(got) || dimIx >= len(want) {
+			t.Fatalf("index out of range")
+		}
+
+		if got[dimIx] != want[dimIx] {
+			t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], want[dimIx])
 		}
 	}
 }
@@ -1273,12 +1278,13 @@ func TestWith_Chaining(t *testing.T) {
 		t.Fatalf("dims = %d, want %d", dims, len(want))
 	}
 
-	for i := range dims {
-		if i >= len(got) {
+	for dimIx := range dims {
+		if dimIx >= len(got) {
 			t.Fatalf("index out of range")
 		}
-		if got[i] != want[i] {
-			t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
+
+		if got[dimIx] != want[dimIx] {
+			t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], want[dimIx])
 		}
 	}
 }
@@ -1330,12 +1336,13 @@ func TestMethodInteractions(t *testing.T) {
 			t.Fatalf("dims = %d, want %d", dims, len(want))
 		}
 
-		for i := range dims {
-			if i >= len(got) {
+		for dimIx := range dims {
+			if dimIx >= len(got) {
 				t.Fatalf("index out of range")
 			}
-			if got[i] != want[i] {
-				t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
+
+			if got[dimIx] != want[dimIx] {
+				t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], want[dimIx])
 			}
 		}
 	})
