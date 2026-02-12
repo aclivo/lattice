@@ -102,6 +102,9 @@ func (a Addr) CoordsSlice(buf []int) []int {
 
 	buf = buf[:dims]
 	for i := range dims {
+		if i >= len(coords) {
+			panic("index out of range")
+		}
 		buf[i] = coords[i]
 	}
 
@@ -148,6 +151,9 @@ func (a Addr) Contains(bAddr Addr) bool {
 	bCoords, _ := bAddr.Coords()
 
 	for i := range aDims {
+		if i >= len(aCoords) || i >= len(bCoords) {
+			return false
+		}
 		if aCoords[i] != bCoords[i] {
 			return false
 		}
@@ -167,6 +173,10 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 	aCoords, dims := a.Coords()
 	for index, ran := range ranges {
 		if index >= dims {
+			break
+		}
+
+		if index >= len(aCoords) {
 			break
 		}
 

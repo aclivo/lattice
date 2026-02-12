@@ -207,6 +207,9 @@ func TestCoords_MaxCapacity(t *testing.T) {
 	}
 
 	for i := range dims {
+		if i >= len(got) {
+			t.Fatalf("index out of range")
+		}
 		if got[i] != MaxCoordValue {
 			t.Errorf("coord[%d] = %d, want %d", i, got[i], MaxCoordValue)
 		}
@@ -1271,6 +1274,9 @@ func TestWith_Chaining(t *testing.T) {
 	}
 
 	for i := range dims {
+		if i >= len(got) {
+			t.Fatalf("index out of range")
+		}
 		if got[i] != want[i] {
 			t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
 		}
