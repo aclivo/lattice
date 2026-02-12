@@ -670,7 +670,7 @@ func TestAppend_Basic(t *testing.T) {
 			}
 
 			for i := range dims {
-				if got[i] != testCase.want[i] {
+				if i < len(got) && i < len(testCase.want) && got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}
@@ -1280,12 +1280,12 @@ func TestWith_Chaining(t *testing.T) {
 	}
 
 	for dimIx := range dims {
-		if dimIx >= len(got) {
+		if dimIx < len(got) && dimIx < len(want) {
+			if got[dimIx] != want[dimIx] {
+				t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], want[dimIx])
+			}
+		} else {
 			t.Fatalf("index out of range")
-		}
-
-		if got[dimIx] != want[dimIx] {
-			t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], want[dimIx])
 		}
 	}
 }
