@@ -206,12 +206,11 @@ func TestCoords_MaxCapacity(t *testing.T) {
 		t.Errorf("dims = %d, want %d", dims, MaxDimensions)
 	}
 
-	for dimIx := range dims {
-		if dimIx >= len(got) {
-			t.Fatalf("index out of range")
-		}
+	if dims > len(got) {
+		t.Fatalf("index out of range")
+	}
 
-		gotDim := got[dimIx]
+	for dimIx, gotDim := range got[:dims] {
 		if gotDim != MaxCoordValue {
 			t.Errorf("coord[%d] = %d, want %d", dimIx, gotDim, MaxCoordValue)
 		}
