@@ -237,7 +237,9 @@ func (a Addr) With(dimIdx int, value int) Addr {
 
 	coords := make([]int, dims)
 	for i := range dims {
-		coords[i] = aCoords[i]
+		if i < len(aCoords) {
+			coords[i] = aCoords[i]
+		}
 	}
 
 	coords[dimIdx] = value
