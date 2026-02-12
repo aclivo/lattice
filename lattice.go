@@ -202,6 +202,7 @@ func (a Addr) IsZero() bool {
 		if i >= len(coords) {
 			return false
 		}
+
 		if coords[i] != 0 {
 			return false
 		}
