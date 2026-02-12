@@ -580,8 +580,10 @@ func BenchmarkRoundTrip_12D(b *testing.B) {
 }
 
 func BenchmarkMapInsert_3D(b *testing.B) {
-	mAddrs := make(map[Addr]float64, b.N)
-	addrs := make([]Addr, b.N)
+	const size = 10000
+
+	mAddrs := make(map[Addr]float64, size)
+	addrs := make([]Addr, size)
 
 	for i := range addrs {
 		v := i % (MaxCoordValue - 10)
@@ -591,7 +593,7 @@ func BenchmarkMapInsert_3D(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; b.Loop(); i++ {
-		mAddrs[addrs[i]] = float64(i)
+		mAddrs[addrs[i%size]] = float64(i)
 	}
 }
 
