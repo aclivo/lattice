@@ -1,7 +1,15 @@
 version: "2"
 linters:
+  enable:
+    - wsl_v5
+  disable:
+    - wsl
   settings:
     testpackage:
       skip-regexp: (lattice_test\.go)
     funlen:
       lines: 80
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
