@@ -162,9 +162,9 @@ func TestCoords_RoundTrip(t *testing.T) {
 				t.Errorf("dims = %d, want %d", dims, len(testCase.coords))
 			}
 
-			for i := range dims {
-				if got[i] != testCase.coords[i] {
-					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.coords[i])
+			for dimIx := range dims {
+				if got[dimIx] != testCase.coords[dimIx] {
+					t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], testCase.coords[dimIx])
 				}
 			}
 		})
@@ -195,8 +195,8 @@ func TestCoords_MaxCapacity(t *testing.T) {
 	t.Parallel()
 
 	coords := make([]int, MaxDimensions)
-	for i := range coords {
-		coords[i] = MaxCoordValue
+	for cor := range coords {
+		coords[cor] = MaxCoordValue
 	}
 
 	addr := New(coords...)
@@ -317,12 +317,12 @@ func TestCoordsSlice_ReusableBuffer(t *testing.T) {
 func TestDims(t *testing.T) {
 	t.Parallel()
 
-	for d := 0; d <= MaxDimensions; d++ {
-		coords := make([]int, d)
+	for dim := 0; dim <= MaxDimensions; dim++ {
+		coords := make([]int, dim)
 		addr := New(coords...)
 
-		if got := addr.Dims(); got != d {
-			t.Errorf("Dims() = %d, want %d", got, d)
+		if got := addr.Dims(); got != dim {
+			t.Errorf("Dims() = %d, want %d", got, dim)
 		}
 	}
 }
