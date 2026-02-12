@@ -1,5 +1,3 @@
-// Package lattice provides a compact, Z-order encoded multidimensional
-// address type for use as Go map keys with zero allocations.
 package lattice
 
 import "fmt"
@@ -38,11 +36,12 @@ func New(coords ...int) Addr {
 	}
 
 	var addr Addr
+
 	addr[0] = uint64(len(coords))
 
 	numDims := len(coords)
-	for bitPos := 0; bitPos < BitsPerCoord; bitPos++ {
-		for dimIdx := 0; dimIdx < numDims; dimIdx++ {
+	for bitPos := range BitsPerCoord {
+		for dimIdx := range numDims {
 			bit := (coords[dimIdx] >> bitPos) & 1
 
 			encodedBitPos := 4 + bitPos*numDims + dimIdx
@@ -68,10 +67,11 @@ func (a Addr) Dims() int {
 // Zero allocations.
 func (a Addr) Coords() ([MaxDimensions]int, int) {
 	var coords [MaxDimensions]int
+
 	dims := a.Dims()
 
-	for bitPos := 0; bitPos < BitsPerCoord; bitPos++ {
-		for dimIdx := 0; dimIdx < dims; dimIdx++ {
+	for bitPos := range BitsPerCoord {
+		for dimIdx := range dims {
 			encodedBitPos := 4 + bitPos*dims + dimIdx
 			arrayIdx := encodedBitPos / 64
 			bitInWord := encodedBitPos % 64
@@ -93,117 +93,136 @@ func (a Addr) CoordsSlice(buf []int) []int {
 	if len(buf) < dims {
 		panic(fmt.Sprintf("lattice: buf too small: need %d, got %d", dims, len(buf)))
 	}
+
 	buf = buf[:dims]
-	for i := 0; i < dims; i++ {
+	for i := range dims {
 		buf[i] = coords[i]
 	}
+
 	return buf
 }
 
 // Append returns a new Addr with extra coordinates added
-// e.g. Addr{1,2}.Append(3) → Addr{1,2,3}
+// e.g. Addr{1,2}.Append(3) → Addr{1,2,3}.
 func (a Addr) Append(coords ...int) Addr {
 	ac, dims := a.Coords()
 	next := make([]int, dims+len(coords))
-	for i := 0; i < dims; i++ {
+
+	for i := range dims {
 		next[i] = ac[i]
 	}
+
 	copy(next[dims:], coords)
+
 	return New(next...)
 }
 
 // At returns the coordinate value at a specific dimension
+// e.g. Addr{1,2,3}.At(1) → 2.
 func (a Addr) At(dimIdx int) int {
 	ac, dims := a.Coords()
 	if dimIdx < 0 || dimIdx >= dims {
 		panic(fmt.Sprintf("lattice: dimension index %d out of range [0:%d]", dimIdx, dims))
 	}
+
 	return ac[dimIdx]
 }
 
 // Contains checks if this address shares a prefix with another
-// e.g. Addr{1,2} contains Addr{1,2,3}
-func (a Addr) Contains(b Addr) bool {
+// e.g. Addr{1,2} contains Addr{1,2,3}.
+func (a Addr) Contains(bAddr Addr) bool {
 	aDims := a.Dims()
-	bDims := b.Dims()
+	bDims := bAddr.Dims()
+
 	if aDims > bDims {
 		return false
 	}
-	ac, _ := a.Coords()
-	bc, _ := b.Coords()
-	for i := 0; i < aDims; i++ {
-		if ac[i] != bc[i] {
+
+	aCoords, _ := a.Coords()
+	bCoords, _ := bAddr.Coords()
+
+	for i := range aDims {
+		if aCoords[i] != bCoords[i] {
 			return false
 		}
 	}
+
 	return true
 }
 
-// Equal checks if two addresses are identical
-func (a Addr) Equal(b Addr) bool {
-	return a == b
+// Equal checks if two addresses are identical.
+func (a Addr) Equal(bAddr Addr) bool {
+	return a == bAddr
 }
 
 // InRange checks if this address falls within the given coordinate ranges
 // ranges: [2]int{min, max} per dimension, use {-1,-1} for "any"
 func (a Addr) InRange(ranges ...[2]int) bool {
-	ac, dims := a.Coords()
-	for i, r := range ranges {
-		if i >= dims {
+	aCoords, dims := a.Coords()
+	for index, ran := range ranges {
+		if index >= dims {
 			break
 		}
-		if r[0] != -1 && ac[i] < r[0] {
+		if ran[0] != -1 && aCoords[index] < ran[0] {
 			return false
 		}
-		if r[1] != -1 && ac[i] > r[1] {
+		if ran[1] != -1 && aCoords[index] > ran[1] {
 			return false
 		}
 	}
+
 	return true
 }
 
-// IsZero checks if all coordinates are zero
+// IsZero checks if all coordinates are zero.
 func (a Addr) IsZero() bool {
 	coords, dims := a.Coords()
-	for i := 0; i < dims; i++ {
+	for i := range dims {
 		if coords[i] != 0 {
 			return false
 		}
 	}
+
 	return true
 }
 
 // Slice returns a new Addr with a subset of dimensions
-// e.g. Addr{1,2,3}.Slice(0,2) → Addr{1,2}
-func (a Addr) Slice(from, to int) Addr {
-	ac, dims := a.Coords()
-	if from < 0 || to > dims || from > to {
-		panic(fmt.Sprintf("lattice: slice [%d:%d] out of range [0:%d]", from, to, dims))
+// e.g. Addr{1,2,3}.Slice(0,2) → Addr{1,2}.
+func (a Addr) Slice(fromAddr, toAddr int) Addr {
+	aCoords, dims := a.Coords()
+	if fromAddr < 0 || toAddr > dims || fromAddr > toAddr {
+		panic(fmt.Sprintf("lattice: slice [%d:%d] out of range [0:%d]", fromAddr, toAddr, dims))
 	}
-	coords := make([]int, to-from)
+
+	coords := make([]int, toAddr-fromAddr)
 	for i := range coords {
-		coords[i] = ac[from+i]
+		coords[i] = aCoords[fromAddr+i]
 	}
+
 	return New(coords...)
 }
 
 // With returns a new Addr with one coordinate replaced
-// e.g. Addr{1,2,3}.With(1, 99) → Addr{1,99,3}
+// e.g. Addr{1,2,3}.With(1, 99) → Addr{1,99,3}.
 func (a Addr) With(dimIdx int, value int) Addr {
-	ac, dims := a.Coords()
+	aCoords, dims := a.Coords()
 	if dimIdx < 0 || dimIdx >= dims {
 		panic(fmt.Sprintf("lattice: dimension index %d out of range [0:%d]", dimIdx, dims))
 	}
+
 	coords := make([]int, dims)
-	for i := 0; i < dims; i++ {
-		coords[i] = ac[i]
+	for i := range dims {
+		coords[i] = aCoords[i]
 	}
+
 	coords[dimIdx] = value
+
 	return New(coords...)
 }
 
 // String returns a human-readable representation of the address.
 func (a Addr) String() string {
 	var buf [MaxDimensions]int
+
 	return fmt.Sprintf("Addr%v", a.CoordsSlice(buf[:]))
 }

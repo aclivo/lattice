@@ -11,6 +11,8 @@ import (
 // ============================================================
 
 func TestNew_Dimensions(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		coords  []int
@@ -24,44 +26,57 @@ func TestNew_Dimensions(t *testing.T) {
 		{"max dimensions", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, 12},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.coords...)
-			if got := addr.Dims(); got != tt.wantDim {
-				t.Errorf("Dims() = %v, want %v", got, tt.wantDim)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.coords...)
+			if got := addr.Dims(); got != testCase.wantDim {
+				t.Errorf("Dims() = %v, want %v", got, testCase.wantDim)
 			}
 		})
 	}
 }
 
 func TestNew_PanicTooManyDimensions(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with 13 dimensions")
 		}
 	}()
+
 	New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
 }
 
 func TestNew_PanicNegativeCoord(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with negative coordinate")
 		}
 	}()
+
 	New(1, -1, 3)
 }
 
 func TestNew_PanicCoordTooLarge(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with coordinate exceeding MaxCoordValue")
 		}
 	}()
+
 	New(1, MaxCoordValue+1, 3)
 }
 
 func TestNew_PanicMessage(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		coords  []int
@@ -84,19 +99,25 @@ func TestNew_PanicMessage(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			defer func() {
-				r := recover()
-				if r == nil {
+				rec := recover()
+
+				if rec == nil {
 					t.Error("expected panic")
+
 					return
 				}
-				if got := fmt.Sprintf("%v", r); got != tt.wantMsg {
-					t.Errorf("panic message = %q, want %q", got, tt.wantMsg)
+
+				if got := fmt.Sprintf("%v", rec); got != testCase.wantMsg {
+					t.Errorf("panic message = %q, want %q", got, testCase.wantMsg)
 				}
 			}()
-			New(tt.coords...)
+
+			New(testCase.coords...)
 		})
 	}
 }
@@ -128,18 +149,20 @@ func TestCoords_RoundTrip(t *testing.T) {
 		{"checkerboard bits", []int{0xAAAAA & MaxCoordValue, 0x55555 & MaxCoordValue}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.coords...)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.coords...)
 			got, dims := addr.Coords()
 
-			if dims != len(tt.coords) {
-				t.Errorf("dims = %d, want %d", dims, len(tt.coords))
+			if dims != len(testCase.coords) {
+				t.Errorf("dims = %d, want %d", dims, len(testCase.coords))
 			}
 
-			for i := 0; i < dims; i++ {
-				if got[i] != tt.coords[i] {
-					t.Errorf("coord[%d] = %d, want %d", i, got[i], tt.coords[i])
+			for i := range dims {
+				if got[i] != testCase.coords[i] {
+					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.coords[i])
 				}
 			}
 		})
@@ -147,23 +170,28 @@ func TestCoords_RoundTrip(t *testing.T) {
 }
 
 func TestCoords_Sequential(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		coords := []int{i, i + 1, i + 2}
+	t.Parallel()
+
+	for testIndex := range 1000 {
+		coords := []int{testIndex, testIndex + 1, testIndex + 2}
 		addr := New(coords...)
 		got, dims := addr.Coords()
 
 		if dims != 3 {
 			t.Fatalf("dims = %d, want 3", dims)
 		}
-		for j := 0; j < dims; j++ {
+
+		for j := range dims {
 			if got[j] != coords[j] {
-				t.Errorf("i=%d coord[%d] = %d, want %d", i, j, got[j], coords[j])
+				t.Errorf("i=%d coord[%d] = %d, want %d", testIndex, j, got[j], coords[j])
 			}
 		}
 	}
 }
 
 func TestCoords_MaxCapacity(t *testing.T) {
+	t.Parallel()
+
 	coords := make([]int, MaxDimensions)
 	for i := range coords {
 		coords[i] = MaxCoordValue
@@ -175,7 +203,8 @@ func TestCoords_MaxCapacity(t *testing.T) {
 	if dims != MaxDimensions {
 		t.Errorf("dims = %d, want %d", dims, MaxDimensions)
 	}
-	for i := 0; i < dims; i++ {
+
+	for i := range dims {
 		if got[i] != MaxCoordValue {
 			t.Errorf("coord[%d] = %d, want %d", i, got[i], MaxCoordValue)
 		}
@@ -187,6 +216,8 @@ func TestCoords_MaxCapacity(t *testing.T) {
 // ============================================================
 
 func TestCoordsSlice_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		coords []int
@@ -199,19 +230,23 @@ func TestCoordsSlice_RoundTrip(t *testing.T) {
 
 	buf := make([]int, MaxDimensions)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.coords...)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.coords...)
 			got := addr.CoordsSlice(buf)
 
-			if !reflect.DeepEqual(got, tt.coords) {
-				t.Errorf("CoordsSlice() = %v, want %v", got, tt.coords)
+			if !reflect.DeepEqual(got, testCase.coords) {
+				t.Errorf("CoordsSlice() = %v, want %v", got, testCase.coords)
 			}
 		})
 	}
 }
 
 func TestCoordsSlice_PanicBufferTooSmall(t *testing.T) {
+	t.Parallel()
+
 	addr := New(1, 2, 3)
 	buf := make([]int, 2) // too small for 3 dims
 
@@ -225,17 +260,21 @@ func TestCoordsSlice_PanicBufferTooSmall(t *testing.T) {
 }
 
 func TestCoordsSlice_PanicMessage(t *testing.T) {
+	t.Parallel()
+
 	addr := New(1, 2, 3)
 	buf := make([]int, 2)
 
 	defer func() {
-		r := recover()
-		if r == nil {
+		rec := recover()
+		if rec == nil {
 			t.Error("expected panic")
+
 			return
 		}
+
 		want := "lattice: buf too small: need 3, got 2"
-		if got := fmt.Sprintf("%v", r); got != want {
+		if got := fmt.Sprintf("%v", rec); got != want {
 			t.Errorf("panic message = %q, want %q", got, want)
 		}
 	}()
@@ -244,6 +283,8 @@ func TestCoordsSlice_PanicMessage(t *testing.T) {
 }
 
 func TestCoordsSlice_ReusableBuffer(t *testing.T) {
+	t.Parallel()
+
 	buf := make([]int, MaxDimensions)
 
 	// Use same buffer for multiple addresses
@@ -256,6 +297,7 @@ func TestCoordsSlice_ReusableBuffer(t *testing.T) {
 	for _, want := range addrs {
 		addr := New(want...)
 		got := addr.CoordsSlice(buf)
+
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("CoordsSlice() = %v, want %v", got, want)
 		}
@@ -267,9 +309,12 @@ func TestCoordsSlice_ReusableBuffer(t *testing.T) {
 // ============================================================
 
 func TestDims(t *testing.T) {
+	t.Parallel()
+
 	for d := 0; d <= MaxDimensions; d++ {
 		coords := make([]int, d)
 		addr := New(coords...)
+
 		if got := addr.Dims(); got != d {
 			t.Errorf("Dims() = %d, want %d", got, d)
 		}
@@ -277,6 +322,8 @@ func TestDims(t *testing.T) {
 }
 
 func TestDims_ZeroValue(t *testing.T) {
+	t.Parallel()
+
 	var addr Addr
 	if got := addr.Dims(); got != 0 {
 		t.Errorf("zero value Dims() = %d, want 0", got)
@@ -288,6 +335,8 @@ func TestDims_ZeroValue(t *testing.T) {
 // ============================================================
 
 func TestNew_Uniqueness(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		a, b         []int
@@ -301,11 +350,13 @@ func TestNew_Uniqueness(t *testing.T) {
 		{"differ by one", []int{1000000, 500000}, []int{1000000, 500001}, false},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			same := New(tt.a...) == New(tt.b...)
-			if same != tt.shouldBeSame {
-				t.Errorf("%v == %v is %v, want %v", tt.a, tt.b, same, tt.shouldBeSame)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			same := New(testCase.a...) == New(testCase.b...)
+			if same != testCase.shouldBeSame {
+				t.Errorf("%v == %v is %v, want %v", testCase.a, testCase.b, same, testCase.shouldBeSame)
 			}
 		})
 	}
@@ -316,44 +367,52 @@ func TestNew_Uniqueness(t *testing.T) {
 // ============================================================
 
 func TestAddr_AsMapKey(t *testing.T) {
-	m := make(map[Addr]float64)
+	t.Parallel()
+
+	mAddrs := make(map[Addr]float64)
 
 	addr1 := New(1, 2, 3)
 	addr2 := New(4, 5, 6)
 	addr3 := New(1, 2, 3) // Same as addr1
 
-	m[addr1] = 1.0
-	m[addr2] = 2.0
-	m[addr3] = 3.0 // Overwrites addr1
+	mAddrs[addr1] = 1.0
+	mAddrs[addr2] = 2.0
+	mAddrs[addr3] = 3.0 // Overwrites addr1
 
-	if len(m) != 2 {
-		t.Errorf("map len = %d, want 2", len(m))
+	if len(mAddrs) != 2 {
+		t.Errorf("map len = %d, want 2", len(mAddrs))
 	}
-	if m[addr1] != 3.0 {
-		t.Errorf("m[addr1] = %f, want 3.0", m[addr1])
+
+	if mAddrs[addr1] != 3.0 {
+		t.Errorf("mAddrs[addr1] = %f, want 3.0", mAddrs[addr1])
 	}
-	if m[addr2] != 2.0 {
-		t.Errorf("m[addr2] = %f, want 2.0", m[addr2])
+
+	if mAddrs[addr2] != 2.0 {
+		t.Errorf("mAddrs[addr2] = %f, want 2.0", mAddrs[addr2])
 	}
 }
 
 func TestAddr_MapKeyNotFound(t *testing.T) {
-	m := make(map[Addr]float64)
-	m[New(1, 2, 3)] = 42.0
+	t.Parallel()
 
-	if _, ok := m[New(9, 9, 9)]; ok {
+	mAddrs := make(map[Addr]float64)
+	mAddrs[New(1, 2, 3)] = 42.0
+
+	if _, ok := mAddrs[New(9, 9, 9)]; ok {
 		t.Error("expected key not to be found")
 	}
 }
 
 func TestAddr_MapDelete(t *testing.T) {
-	m := make(map[Addr]float64)
+	t.Parallel()
+
+	mAddrs := make(map[Addr]float64)
 
 	addr := New(1, 2, 3)
-	m[addr] = 42.0
-	delete(m, addr)
+	mAddrs[addr] = 42.0
+	delete(mAddrs, addr)
 
-	if _, ok := m[addr]; ok {
+	if _, ok := mAddrs[addr]; ok {
 		t.Error("expected key to be deleted")
 	}
 }
@@ -363,6 +422,8 @@ func TestAddr_MapDelete(t *testing.T) {
 // ============================================================
 
 func TestAddr_String(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		coords []int
 		want   string
@@ -374,11 +435,13 @@ func TestAddr_String(t *testing.T) {
 		{[]int{0, MaxCoordValue}, fmt.Sprintf("Addr[0 %d]", MaxCoordValue)},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.want, func(t *testing.T) {
-			got := New(tt.coords...).String()
-			if got != tt.want {
-				t.Errorf("String() = %q, want %q", got, tt.want)
+	for _, testCase := range tests {
+		t.Run(testCase.want, func(t *testing.T) {
+			t.Parallel()
+
+			got := New(testCase.coords...).String()
+			if got != testCase.want {
+				t.Errorf("String() = %q, want %q", got, testCase.want)
 			}
 		})
 	}
@@ -389,12 +452,16 @@ func TestAddr_String(t *testing.T) {
 // ============================================================
 
 func TestConstants(t *testing.T) {
+	t.Parallel()
+
 	if BitsPerCoord != 20 {
 		t.Errorf("BitsPerCoord = %d, want 20", BitsPerCoord)
 	}
+
 	if MaxDimensions != 12 {
 		t.Errorf("MaxDimensions = %d, want 12", MaxDimensions)
 	}
+
 	if MaxCoordValue != 1048575 {
 		t.Errorf("MaxCoordValue = %d, want 1048575", MaxCoordValue)
 	}
@@ -405,7 +472,7 @@ func TestConstants(t *testing.T) {
 // ============================================================
 
 func BenchmarkNew_1D(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New(12345)
 	}
 }
@@ -437,8 +504,10 @@ func BenchmarkNew_12D_Large(b *testing.B) {
 
 func BenchmarkCoords_3D(b *testing.B) {
 	addr := New(100, 200, 300)
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_, _ = addr.Coords()
 	}
@@ -446,8 +515,10 @@ func BenchmarkCoords_3D(b *testing.B) {
 
 func BenchmarkCoords_12D(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_, _ = addr.Coords()
 	}
@@ -456,8 +527,10 @@ func BenchmarkCoords_12D(b *testing.B) {
 func BenchmarkCoordsSlice_3D(b *testing.B) {
 	addr := New(100, 200, 300)
 	buf := make([]int, MaxDimensions)
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.CoordsSlice(buf)
 	}
@@ -466,8 +539,10 @@ func BenchmarkCoordsSlice_3D(b *testing.B) {
 func BenchmarkCoordsSlice_12D(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 	buf := make([]int, MaxDimensions)
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.CoordsSlice(buf)
 	}
@@ -475,7 +550,9 @@ func BenchmarkCoordsSlice_12D(b *testing.B) {
 
 func BenchmarkDims(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.Dims()
 	}
@@ -483,8 +560,10 @@ func BenchmarkDims(b *testing.B) {
 
 func BenchmarkRoundTrip_3D(b *testing.B) {
 	coords := []int{100, 200, 300}
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		addr := New(coords...)
 		_, _ = addr.Coords()
@@ -493,8 +572,10 @@ func BenchmarkRoundTrip_3D(b *testing.B) {
 
 func BenchmarkRoundTrip_12D(b *testing.B) {
 	coords := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		addr := New(coords...)
 		_, _ = addr.Coords()
@@ -502,55 +583,65 @@ func BenchmarkRoundTrip_12D(b *testing.B) {
 }
 
 func BenchmarkMapInsert_3D(b *testing.B) {
-	m := make(map[Addr]float64, b.N)
+	mAddrs := make(map[Addr]float64, b.N)
 	addrs := make([]Addr, b.N)
+
 	for i := range addrs {
 		v := i % (MaxCoordValue - 10)
 		addrs[i] = New(v, v+1, v+2)
 	}
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
-		m[addrs[i]] = float64(i)
+		mAddrs[addrs[i]] = float64(i)
 	}
 }
 
 func BenchmarkMapLookup_3D(b *testing.B) {
-	m := make(map[Addr]float64, 10000)
+	mAddrs := make(map[Addr]float64, 10000)
 	for i := 0; i < 10000; i++ {
-		m[New(i, i+1, i+2)] = float64(i)
+		mAddrs[New(i, i+1, i+2)] = float64(i)
 	}
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		idx := i % 10000
-		_ = m[New(idx, idx+1, idx+2)]
+		_ = mAddrs[New(idx, idx+1, idx+2)]
 	}
 }
 
 func BenchmarkMapLookup_12D(b *testing.B) {
-	m := make(map[Addr]float64, 10000)
+	mAddrs := make(map[Addr]float64, 10000)
 	for i := 0; i < 10000; i++ {
-		m[New(i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, i+10, i+11)] = float64(i)
+		mAddrs[New(i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, i+10, i+11)] = float64(i)
 	}
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		idx := i % 10000
-		_ = m[New(idx, idx+1, idx+2, idx+3, idx+4, idx+5,
+		_ = mAddrs[New(idx, idx+1, idx+2, idx+3, idx+4, idx+5,
 			idx+6, idx+7, idx+8, idx+9, idx+10, idx+11)]
 	}
 }
 
 func BenchmarkMapIteration_100k(b *testing.B) {
-	m := make(map[Addr]float64, 100000)
+	mAddrs := make(map[Addr]float64, 100000)
 	for i := 0; i < 100000; i++ {
 		v := i % (MaxCoordValue - 10)
-		m[New(v, v+1, v+2)] = float64(i)
+		mAddrs[New(v, v+1, v+2)] = float64(i)
 	}
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		var sum float64
-		for _, v := range m {
+		for _, v := range mAddrs {
 			sum += v
 		}
+
 		_ = sum
 	}
 }
@@ -560,6 +651,8 @@ func BenchmarkMapIteration_100k(b *testing.B) {
 // ============================================================
 
 func TestAppend_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		base   []int
@@ -573,17 +666,19 @@ func TestAppend_Basic(t *testing.T) {
 		{"append large values", []int{500000}, []int{999999, 1048575}, []int{500000, 999999, 1048575}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.base...).Append(tt.append...)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.base...).Append(testCase.append...)
 			got, dims := addr.Coords()
 
-			if dims != len(tt.want) {
-				t.Fatalf("dims = %d, want %d", dims, len(tt.want))
+			if dims != len(testCase.want) {
+				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
 			for i := 0; i < dims; i++ {
-				if got[i] != tt.want[i] {
-					t.Errorf("coord[%d] = %d, want %d", i, got[i], tt.want[i])
+				if got[i] != testCase.want[i] {
+					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}
 		})
@@ -591,6 +686,8 @@ func TestAppend_Basic(t *testing.T) {
 }
 
 func TestAppend_PreservesOriginal(t *testing.T) {
+	t.Parallel()
+
 	original := New(1, 2, 3)
 	_ = original.Append(4, 5)
 
@@ -598,12 +695,15 @@ func TestAppend_PreservesOriginal(t *testing.T) {
 	if original.Dims() != 3 {
 		t.Errorf("original dims = %d, want 3", original.Dims())
 	}
+
 	if original.At(2) != 3 {
 		t.Errorf("original coord[2] = %d, want 3", original.At(2))
 	}
 }
 
 func TestAppend_PanicTooManyDimensions(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic when exceeding MaxDimensions")
@@ -616,6 +716,8 @@ func TestAppend_PanicTooManyDimensions(t *testing.T) {
 }
 
 func TestAppend_Chaining(t *testing.T) {
+	t.Parallel()
+
 	addr := New(1).Append(2).Append(3).Append(4)
 	want := []int{1, 2, 3, 4}
 
@@ -635,6 +737,8 @@ func TestAppend_Chaining(t *testing.T) {
 // ============================================================
 
 func TestAt_Basic(t *testing.T) {
+	t.Parallel()
+
 	addr := New(10, 20, 30)
 
 	tests := []struct {
@@ -648,6 +752,8 @@ func TestAt_Basic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("dim%d", tt.dimIdx), func(t *testing.T) {
+			t.Parallel()
+
 			if got := addr.At(tt.dimIdx); got != tt.want {
 				t.Errorf("At(%d) = %d, want %d", tt.dimIdx, got, tt.want)
 			}
@@ -656,49 +762,65 @@ func TestAt_Basic(t *testing.T) {
 }
 
 func TestAt_LargeValues(t *testing.T) {
+	t.Parallel()
+
 	addr := New(500000, 999999, MaxCoordValue)
 
 	if got := addr.At(0); got != 500000 {
 		t.Errorf("At(0) = %d, want 500000", got)
 	}
+
 	if got := addr.At(1); got != 999999 {
 		t.Errorf("At(1) = %d, want 999999", got)
 	}
+
 	if got := addr.At(2); got != MaxCoordValue {
 		t.Errorf("At(2) = %d, want %d", got, MaxCoordValue)
 	}
 }
 
 func TestAt_PanicNegativeIndex(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with negative index")
 		}
 	}()
+
 	New(1, 2, 3).At(-1)
 }
 
 func TestAt_PanicIndexOutOfRange(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with index out of range")
 		}
 	}()
+
 	New(1, 2, 3).At(3)
 }
 
 func TestAt_PanicMessage(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
-		r := recover()
-		if r == nil {
+		rec := recover()
+
+		if rec == nil {
 			t.Error("expected panic")
+
 			return
 		}
+
 		want := "lattice: dimension index 5 out of range [0:3]"
-		if got := fmt.Sprintf("%v", r); got != want {
+		if got := fmt.Sprintf("%v", rec); got != want {
 			t.Errorf("panic message = %q, want %q", got, want)
 		}
 	}()
+
 	New(1, 2, 3).At(5)
 }
 
@@ -707,6 +829,8 @@ func TestAt_PanicMessage(t *testing.T) {
 // ============================================================
 
 func TestContains_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		a, b []int
@@ -721,33 +845,40 @@ func TestContains_Basic(t *testing.T) {
 		{"single dim mismatch", []int{2}, []int{1, 2, 3}, false},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.a...).Contains(New(tt.b...))
-			if got != tt.want {
-				t.Errorf("Contains() = %v, want %v", got, tt.want)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := New(testCase.a...).Contains(New(testCase.b...))
+			if got != testCase.want {
+				t.Errorf("Contains() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
 }
 
 func TestContains_NotCommutative(t *testing.T) {
-	a := New(1, 2)
-	b := New(1, 2, 3)
+	t.Parallel()
 
-	if !a.Contains(b) {
+	aAddr := New(1, 2)
+	bAddr := New(1, 2, 3)
+
+	if !aAddr.Contains(bAddr) {
 		t.Error("a.Contains(b) should be true")
 	}
-	if b.Contains(a) {
+
+	if bAddr.Contains(aAddr) {
 		t.Error("b.Contains(a) should be false")
 	}
 }
 
 func TestContains_LargeValues(t *testing.T) {
-	a := New(500000, 999999)
-	b := New(500000, 999999, 1048575)
+	t.Parallel()
 
-	if !a.Contains(b) {
+	aAddr := New(500000, 999999)
+	bAddr := New(500000, 999999, 1048575)
+
+	if !aAddr.Contains(bAddr) {
 		t.Error("expected a to contain b")
 	}
 }
@@ -757,6 +888,8 @@ func TestContains_LargeValues(t *testing.T) {
 // ============================================================
 
 func TestEqual_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		a, b []int
@@ -773,17 +906,21 @@ func TestEqual_Basic(t *testing.T) {
 	// Fix: single value equal should be true
 	tests[4].want = true
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.a...).Equal(New(tt.b...))
-			if got != tt.want {
-				t.Errorf("Equal() = %v, want %v", got, tt.want)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := New(testCase.a...).Equal(New(testCase.b...))
+			if got != testCase.want {
+				t.Errorf("Equal() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
 }
 
 func TestEqual_Reflexive(t *testing.T) {
+	t.Parallel()
+
 	addr := New(1, 2, 3)
 	if !addr.Equal(addr) {
 		t.Error("addr should equal itself")
@@ -791,6 +928,8 @@ func TestEqual_Reflexive(t *testing.T) {
 }
 
 func TestEqual_Symmetric(t *testing.T) {
+	t.Parallel()
+
 	a := New(1, 2, 3)
 	b := New(1, 2, 3)
 
@@ -804,6 +943,8 @@ func TestEqual_Symmetric(t *testing.T) {
 // ============================================================
 
 func TestInRange_Basic(t *testing.T) {
+	t.Parallel()
+
 	addr := New(10, 20, 30)
 
 	tests := []struct {
@@ -824,17 +965,21 @@ func TestInRange_Basic(t *testing.T) {
 		{"max fails", [][2]int{{-1, 9}}, false},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := addr.InRange(tt.ranges...)
-			if got != tt.want {
-				t.Errorf("InRange() = %v, want %v", got, tt.want)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := addr.InRange(testCase.ranges...)
+			if got != testCase.want {
+				t.Errorf("InRange() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
 }
 
 func TestInRange_FewerRangesThanDims(t *testing.T) {
+	t.Parallel()
+
 	addr := New(10, 20, 30)
 
 	// Only check first two dimensions
@@ -844,6 +989,8 @@ func TestInRange_FewerRangesThanDims(t *testing.T) {
 }
 
 func TestInRange_MoreRangesThanDims(t *testing.T) {
+	t.Parallel()
+
 	addr := New(10, 20)
 
 	// Extra ranges are ignored
@@ -853,6 +1000,8 @@ func TestInRange_MoreRangesThanDims(t *testing.T) {
 }
 
 func TestInRange_BoundaryValues(t *testing.T) {
+	t.Parallel()
+
 	addr := New(0, MaxCoordValue)
 
 	if !addr.InRange([2]int{0, 0}, [2]int{MaxCoordValue, MaxCoordValue}) {
@@ -865,6 +1014,8 @@ func TestInRange_BoundaryValues(t *testing.T) {
 // ============================================================
 
 func TestIsZero_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		coords []int
@@ -877,17 +1028,21 @@ func TestIsZero_Basic(t *testing.T) {
 		{"first nonzero", []int{1, 0, 0}, false},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.coords...).IsZero()
-			if got != tt.want {
-				t.Errorf("IsZero() = %v, want %v", got, tt.want)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := New(testCase.coords...).IsZero()
+			if got != testCase.want {
+				t.Errorf("IsZero() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
 }
 
 func TestIsZero_EmptyAddr(t *testing.T) {
+	t.Parallel()
+
 	// Empty address has no coordinates - all zero vacuously
 	if !New().IsZero() {
 		t.Error("empty address should be zero")
@@ -895,6 +1050,8 @@ func TestIsZero_EmptyAddr(t *testing.T) {
 }
 
 func TestIsZero_ZeroValue(t *testing.T) {
+	t.Parallel()
+
 	var addr Addr
 	if !addr.IsZero() {
 		t.Error("zero value Addr should be zero")
@@ -906,6 +1063,8 @@ func TestIsZero_ZeroValue(t *testing.T) {
 // ============================================================
 
 func TestSlice_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		coords   []int
@@ -920,17 +1079,19 @@ func TestSlice_Basic(t *testing.T) {
 		{"empty slice", []int{1, 2, 3}, 1, 1, []int{}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.coords...).Slice(tt.from, tt.to)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.coords...).Slice(testCase.from, testCase.to)
 			got, dims := addr.Coords()
 
-			if dims != len(tt.want) {
-				t.Fatalf("dims = %d, want %d", dims, len(tt.want))
+			if dims != len(testCase.want) {
+				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
 			for i := 0; i < dims; i++ {
-				if got[i] != tt.want[i] {
-					t.Errorf("coord[%d] = %d, want %d", i, got[i], tt.want[i])
+				if got[i] != testCase.want[i] {
+					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}
 		})
@@ -938,48 +1099,64 @@ func TestSlice_Basic(t *testing.T) {
 }
 
 func TestSlice_PanicFromNegative(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with negative from")
 		}
 	}()
+
 	New(1, 2, 3).Slice(-1, 2)
 }
 
 func TestSlice_PanicToOutOfRange(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with to out of range")
 		}
 	}()
+
 	New(1, 2, 3).Slice(0, 4)
 }
 
 func TestSlice_PanicFromGreaterThanTo(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with from > to")
 		}
 	}()
+
 	New(1, 2, 3).Slice(2, 1)
 }
 
 func TestSlice_PanicMessage(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
-		r := recover()
-		if r == nil {
+		rec := recover()
+		if rec == nil {
 			t.Error("expected panic")
+
 			return
 		}
+
 		want := "lattice: slice [1:5] out of range [0:3]"
-		if got := fmt.Sprintf("%v", r); got != want {
+		if got := fmt.Sprintf("%v", rec); got != want {
 			t.Errorf("panic message = %q, want %q", got, want)
 		}
 	}()
+
 	New(1, 2, 3).Slice(1, 5)
 }
 
 func TestSlice_PreservesOriginal(t *testing.T) {
+	t.Parallel()
+
 	original := New(1, 2, 3, 4, 5)
 	_ = original.Slice(1, 3)
 
@@ -993,6 +1170,8 @@ func TestSlice_PreservesOriginal(t *testing.T) {
 // ============================================================
 
 func TestWith_Basic(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		coords []int
@@ -1008,17 +1187,19 @@ func TestWith_Basic(t *testing.T) {
 		{"replace single dim", []int{42}, 0, 99, []int{99}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr := New(tt.coords...).With(tt.dimIdx, tt.value)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			addr := New(testCase.coords...).With(testCase.dimIdx, testCase.value)
 			got, dims := addr.Coords()
 
-			if dims != len(tt.want) {
-				t.Fatalf("dims = %d, want %d", dims, len(tt.want))
+			if dims != len(testCase.want) {
+				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
 			for i := 0; i < dims; i++ {
-				if got[i] != tt.want[i] {
-					t.Errorf("coord[%d] = %d, want %d", i, got[i], tt.want[i])
+				if got[i] != testCase.want[i] {
+					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}
 		})
@@ -1026,39 +1207,53 @@ func TestWith_Basic(t *testing.T) {
 }
 
 func TestWith_PanicNegativeIndex(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with negative index")
 		}
 	}()
+
 	New(1, 2, 3).With(-1, 99)
 }
 
 func TestWith_PanicIndexOutOfRange(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic with index out of range")
 		}
 	}()
+
 	New(1, 2, 3).With(3, 99)
 }
 
 func TestWith_PanicMessage(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
-		r := recover()
-		if r == nil {
+		rec := recover()
+
+		if rec == nil {
 			t.Error("expected panic")
+
 			return
 		}
+
 		want := "lattice: dimension index 5 out of range [0:3]"
-		if got := fmt.Sprintf("%v", r); got != want {
+		if got := fmt.Sprintf("%v", rec); got != want {
 			t.Errorf("panic message = %q, want %q", got, want)
 		}
 	}()
+
 	New(1, 2, 3).With(5, 99)
 }
 
 func TestWith_PreservesOriginal(t *testing.T) {
+	t.Parallel()
+
 	original := New(1, 2, 3)
 	_ = original.With(1, 99)
 
@@ -1068,6 +1263,8 @@ func TestWith_PreservesOriginal(t *testing.T) {
 }
 
 func TestWith_Chaining(t *testing.T) {
+	t.Parallel()
+
 	addr := New(0, 0, 0).
 		With(0, 10).
 		With(1, 20).
@@ -1092,6 +1289,8 @@ func TestWith_Chaining(t *testing.T) {
 
 func TestMethodInteractions(t *testing.T) {
 	t.Run("Append then At", func(t *testing.T) {
+		t.Parallel()
+
 		addr := New(1, 2).Append(3)
 		if got := addr.At(2); got != 3 {
 			t.Errorf("At(2) = %d, want 3", got)
@@ -1099,22 +1298,30 @@ func TestMethodInteractions(t *testing.T) {
 	})
 
 	t.Run("With then Equal", func(t *testing.T) {
+		t.Parallel()
+
 		a := New(1, 2, 3).With(1, 99)
 		b := New(1, 99, 3)
+
 		if !a.Equal(b) {
 			t.Error("expected addresses to be equal after With")
 		}
 	})
 
 	t.Run("Slice then Contains", func(t *testing.T) {
+		t.Parallel()
+
 		original := New(1, 2, 3, 4, 5)
 		prefix := original.Slice(0, 3)
+
 		if !prefix.Contains(original) {
 			t.Error("expected sliced prefix to contain original")
 		}
 	})
 
 	t.Run("Append then Slice", func(t *testing.T) {
+		t.Parallel()
+
 		addr := New(1, 2).Append(3, 4, 5).Slice(1, 4)
 		want := []int{2, 3, 4}
 		got, dims := addr.Coords()
@@ -1130,6 +1337,8 @@ func TestMethodInteractions(t *testing.T) {
 	})
 
 	t.Run("IsZero after With", func(t *testing.T) {
+		t.Parallel()
+
 		addr := New(0, 0, 0).With(1, 1)
 		if addr.IsZero() {
 			t.Error("expected IsZero to be false after With")
@@ -1137,6 +1346,8 @@ func TestMethodInteractions(t *testing.T) {
 	})
 
 	t.Run("InRange after Append", func(t *testing.T) {
+		t.Parallel()
+
 		addr := New(10, 20).Append(30)
 		if !addr.InRange([2]int{5, 15}, [2]int{15, 25}, [2]int{25, 35}) {
 			t.Error("expected InRange to be true after Append")
@@ -1150,7 +1361,9 @@ func TestMethodInteractions(t *testing.T) {
 
 func BenchmarkAppend_One(b *testing.B) {
 	addr := New(1, 2, 3)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.Append(4)
 	}
@@ -1158,34 +1371,42 @@ func BenchmarkAppend_One(b *testing.B) {
 
 func BenchmarkAt(b *testing.B) {
 	addr := New(10, 20, 30, 40, 50)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.At(2)
 	}
 }
 
 func BenchmarkContains(b *testing.B) {
-	a := New(1, 2)
+	aAddr := New(1, 2)
 	bAddr := New(1, 2, 3, 4, 5)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
-		_ = a.Contains(bAddr)
+		_ = aAddr.Contains(bAddr)
 	}
 }
 
 func BenchmarkEqual(b *testing.B) {
-	a := New(1, 2, 3, 4, 5)
+	aAddr := New(1, 2, 3, 4, 5)
 	bAddr := New(1, 2, 3, 4, 5)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
-		_ = a.Equal(bAddr)
+		_ = aAddr.Equal(bAddr)
 	}
 }
 
 func BenchmarkInRange_3D(b *testing.B) {
 	addr := New(100, 200, 300)
 	ranges := [][2]int{{50, 150}, {150, 250}, {250, 350}}
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.InRange(ranges...)
 	}
@@ -1193,7 +1414,9 @@ func BenchmarkInRange_3D(b *testing.B) {
 
 func BenchmarkIsZero(b *testing.B) {
 	addr := New(0, 0, 0, 0, 0)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.IsZero()
 	}
@@ -1201,7 +1424,9 @@ func BenchmarkIsZero(b *testing.B) {
 
 func BenchmarkSlice(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5, 6)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.Slice(1, 4)
 	}
@@ -1209,7 +1434,9 @@ func BenchmarkSlice(b *testing.B) {
 
 func BenchmarkWith(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5)
+
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		_ = addr.With(2, 99)
 	}
