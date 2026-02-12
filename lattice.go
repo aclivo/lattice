@@ -153,11 +153,11 @@ func (a Addr) Contains(bAddr Addr) bool {
 	bCoords, _ := bAddr.Coords()
 
 	for i := range aDims {
-		if i >= len(aCoords) || i >= len(bCoords) {
+		if i < len(aCoords) && i < len(bCoords) && aCoords[i] != bCoords[i] {
 			return false
 		}
 
-		if aCoords[i] != bCoords[i] {
+		if i >= len(aCoords) || i >= len(bCoords) {
 			return false
 		}
 	}
@@ -183,12 +183,16 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 			break
 		}
 
-		if len(ran) > 0 && ran[0] != -1 && aCoords[index] < ran[0] {
-			return false
+		if len(ran) > 0 && ran[0] != -1 {
+			if index < len(aCoords) && aCoords[index] < ran[0] {
+				return false
+			}
 		}
 
-		if len(ran) > 1 && ran[1] != -1 && index < len(aCoords) && aCoords[index] > ran[1] {
-			return false
+		if len(ran) > 1 && ran[1] != -1 {
+			if index < len(aCoords) && aCoords[index] > ran[1] {
+				return false
+			}
 		}
 	}
 

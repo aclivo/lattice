@@ -234,13 +234,12 @@ func TestCoordsSlice_RoundTrip(t *testing.T) {
 		{"large values", []int{500000, 999999, 1048575}},
 	}
 
-	buf := make([]int, MaxDimensions)
-
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			addr := New(testCase.coords...)
+			buf := make([]int, MaxDimensions)
 			got := addr.CoordsSlice(buf)
 
 			if !reflect.DeepEqual(got, testCase.coords) {
