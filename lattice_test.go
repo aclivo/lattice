@@ -884,63 +884,6 @@ func TestContains_LargeValues(t *testing.T) {
 }
 
 // ============================================================
-// Equal
-// ============================================================
-
-func TestEqual_Basic(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-		a, b []int
-		want bool
-	}{
-		{"identical", []int{1, 2, 3}, []int{1, 2, 3}, true},
-		{"different values", []int{1, 2, 3}, []int{1, 2, 4}, false},
-		{"different length", []int{1, 2}, []int{1, 2, 3}, false},
-		{"empty equal", []int{}, []int{}, true},
-		{"single equal", []int{42}, []int{42}, false},
-		{"reversed", []int{1, 2, 3}, []int{3, 2, 1}, false},
-	}
-
-	// Fix: single value equal should be true
-	tests[4].want = true
-
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := New(testCase.a...).Equal(New(testCase.b...))
-			if got != testCase.want {
-				t.Errorf("Equal() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestEqual_Reflexive(t *testing.T) {
-	t.Parallel()
-
-	addr := New(1, 2, 3)
-	addr2 := New(1, 2, 3)
-
-	if !addr.Equal(addr2) {
-		t.Error("addr should equal another with same coordinates")
-	}
-}
-
-func TestEqual_Symmetric(t *testing.T) {
-	t.Parallel()
-
-	a := New(1, 2, 3)
-	b := New(1, 2, 3)
-
-	if a.Equal(b) != b.Equal(a) {
-		t.Error("Equal should be symmetric")
-	}
-}
-
-// ============================================================
 // IsZero
 // ============================================================
 
@@ -1243,7 +1186,7 @@ func TestMethodInteractions(t *testing.T) {
 		a := New(1, 2, 3).With(1, 99)
 		b := New(1, 99, 3)
 
-		if !a.Equal(b) {
+		if a != b {
 			t.Error("expected addresses to be equal after With")
 		}
 	})
@@ -1323,17 +1266,6 @@ func BenchmarkContains(b *testing.B) {
 
 	for i := 0; b.Loop(); i++ {
 		_ = aAddr.Contains(bAddr)
-	}
-}
-
-func BenchmarkEqual(b *testing.B) {
-	aAddr := New(1, 2, 3, 4, 5)
-	bAddr := New(1, 2, 3, 4, 5)
-
-	b.ResetTimer()
-
-	for i := 0; b.Loop(); i++ {
-		_ = aAddr.Equal(bAddr)
 	}
 }
 

@@ -68,12 +68,7 @@ func New(coords ...int) Addr {
 
 // Dims returns the number of dimensions in this address.
 func (a Addr) Dims() int {
-	v := a[0] & dimsMask
-	if v > MaxDimensions {
-		return MaxDimensions
-	}
-
-	return int(v)
+	return int(a[0] & dimsMask)
 }
 
 // Coords decodes and returns coordinates as a stack-allocated array.
@@ -111,10 +106,6 @@ func (a Addr) CoordsSlice(buf []int) []int {
 	buf = buf[:dims]
 
 	for i := range dims {
-		if i >= len(coords) || i >= len(buf) {
-			panic("index out of range")
-		}
-
 		buf[i] = coords[i]
 	}
 
@@ -173,9 +164,33 @@ func (a Addr) Contains(bAddr Addr) bool {
 	return true
 }
 
-// Equal checks if two addresses are identical.
-func (a Addr) Equal(bAddr Addr) bool {
-	return a == bAddr
+// InRange checks if this address falls within the given coordinate ranges
+// ranges: [2]int{min, max} per dimension, use {-1,-1} for "any"
+func (a Addr) InRange(ranges ...[2]int) bool {
+	aCoords, dims := a.Coords()
+	for index, ran := range ranges {
+		if index >= dims {
+			break
+		}
+
+		if index >= len(aCoords) {
+			break
+		}
+
+		if len(ran) > 0 && ran[0] != -1 {
+			if index < len(aCoords) && aCoords[index] < ran[0] {
+				return false
+			}
+		}
+
+		if len(ran) > 1 && ran[1] != -1 {
+			if index < len(aCoords) && aCoords[index] > ran[1] {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // IsZero checks if all coordinates are zero.
