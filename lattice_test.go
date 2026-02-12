@@ -920,8 +920,10 @@ func TestEqual_Reflexive(t *testing.T) {
 	t.Parallel()
 
 	addr := New(1, 2, 3)
-	if !addr.Equal(addr) {
-		t.Error("addr should equal itself")
+	addr2 := New(1, 2, 3)
+
+	if !addr.Equal(addr2) {
+		t.Error("addr should equal another with same coordinates")
 	}
 }
 
