@@ -68,7 +68,7 @@ func New(coords ...int) Addr {
 
 // Dims returns the number of dimensions in this address.
 func (a Addr) Dims() int {
-	return int(a[0] & dimsMask)
+	return int(a[0] & dimsMask) //nolint:gosec // dimsMask ensures value fits in [0,15]
 }
 
 // Coords decodes and returns coordinates as a stack-allocated array.
@@ -106,7 +106,7 @@ func (a Addr) CoordsSlice(buf []int) []int {
 	buf = buf[:dims]
 
 	for i := range dims {
-		buf[i] = coords[i]
+		buf[i] = coords[i] //nolint:gosec // coords is [MaxDimensions]int, dims <= MaxDimensions
 	}
 
 	return buf
@@ -152,11 +152,7 @@ func (a Addr) Contains(bAddr Addr) bool {
 	bCoords, _ := bAddr.Coords()
 
 	for i := range aDims {
-		if i < len(aCoords) && i < len(bCoords) && aCoords[i] != bCoords[i] {
-			return false
-		}
-
-		if i >= len(aCoords) || i >= len(bCoords) {
+		if aCoords[i] != bCoords[i] { //nolint:gosec // i < aDims <= MaxDimensions == len(aCoords)
 			return false
 		}
 	}
@@ -164,29 +160,24 @@ func (a Addr) Contains(bAddr Addr) bool {
 	return true
 }
 
-// InRange checks if this address falls within the given coordinate ranges
-// ranges: [2]int{min, max} per dimension, use {-1,-1} for "any"
+// InRange checks if this address falls within the given coordinate ranges.
+// ranges: [2]int{min, max} per dimension, use {-1,-1} for "any".
 func (a Addr) InRange(ranges ...[2]int) bool {
 	aCoords, dims := a.Coords()
+
 	for index, ran := range ranges {
 		if index >= dims {
 			break
 		}
 
-		if index >= len(aCoords) {
-			break
+		coord := aCoords[index]
+
+		if ran[0] != -1 && coord < ran[0] { //nolint:gosec // ran is [2]int, indexes 0 and 1 always valid
+			return false
 		}
 
-		if len(ran) > 0 && ran[0] != -1 {
-			if index < len(aCoords) && aCoords[index] < ran[0] {
-				return false
-			}
-		}
-
-		if len(ran) > 1 && ran[1] != -1 {
-			if index < len(aCoords) && aCoords[index] > ran[1] {
-				return false
-			}
+		if ran[1] != -1 && coord > ran[1] { //nolint:gosec // ran is [2]int, indexes 0 and 1 always valid
+			return false
 		}
 	}
 
@@ -197,7 +188,7 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 func (a Addr) IsZero() bool {
 	coords, dims := a.Coords()
 	for i := range dims {
-		if i < len(coords) && coords[i] != 0 {
+		if coords[i] != 0 { //nolint:gosec // i < dims <= MaxDimensions == len(coords)
 			return false
 		}
 	}
@@ -232,9 +223,7 @@ func (a Addr) With(dimIdx int, value int) Addr {
 	coords := make([]int, dims)
 
 	for i := range dims {
-		if i < len(aCoords) {
-			coords[i] = aCoords[i]
-		}
+		coords[i] = aCoords[i] //nolint:gosec // i < dims <= MaxDimensions == len(aCoords)
 	}
 
 	coords[dimIdx] = value
