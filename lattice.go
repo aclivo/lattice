@@ -19,6 +19,12 @@ const (
 
 	// MaxCoordValue is the maximum value a coordinate can hold (2^20 - 1 = 1,048,575).
 	MaxCoordValue = (1 << BitsPerCoord) - 1
+
+	// dimsBits is the number of bits used to store the number of dimensions.
+	dimsBits = 4
+
+	// bitsPerWord is the number of bits in a uint64 word.
+	bitsPerWord = 64
 )
 
 // New creates a new Addr from the given coordinates using Z-order encoding.
@@ -44,11 +50,11 @@ func New(coords ...int) Addr {
 		for dimIdx := range numDims {
 			bit := (coords[dimIdx] >> bitPos) & 1
 
-			encodedBitPos := 4 + bitPos*numDims + dimIdx
+			encodedBitPos := dimsBits + bitPos*numDims + dimIdx
 
 			if bit == 1 {
-				arrayIdx := encodedBitPos / 64
-				bitInWord := encodedBitPos % 64
+				arrayIdx := encodedBitPos / bitsPerWord
+				bitInWord := encodedBitPos % bitsPerWord
 				addr[arrayIdx] |= 1 << bitInWord
 			}
 		}
@@ -72,9 +78,9 @@ func (a Addr) Coords() ([MaxDimensions]int, int) {
 
 	for bitPos := range BitsPerCoord {
 		for dimIdx := range dims {
-			encodedBitPos := 4 + bitPos*dims + dimIdx
-			arrayIdx := encodedBitPos / 64
-			bitInWord := encodedBitPos % 64
+			encodedBitPos := dimsBits + bitPos*dims + dimIdx
+			arrayIdx := encodedBitPos / bitsPerWord
+			bitInWord := encodedBitPos % bitsPerWord
 
 			if (a[arrayIdx]>>bitInWord)&1 == 1 {
 				coords[dimIdx] |= 1 << bitPos
@@ -163,9 +169,11 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 		if index >= dims {
 			break
 		}
+
 		if ran[0] != -1 && aCoords[index] < ran[0] {
 			return false
 		}
+
 		if ran[1] != -1 && aCoords[index] > ran[1] {
 			return false
 		}

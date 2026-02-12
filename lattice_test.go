@@ -127,6 +127,8 @@ func TestNew_PanicMessage(t *testing.T) {
 // ============================================================
 
 func TestCoords_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		coords []int
@@ -478,25 +480,25 @@ func BenchmarkNew_1D(b *testing.B) {
 }
 
 func BenchmarkNew_3D(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New(100, 200, 300)
 	}
 }
 
 func BenchmarkNew_6D(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New(100, 200, 300, 400, 500, 600)
 	}
 }
 
 func BenchmarkNew_12D(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 	}
 }
 
 func BenchmarkNew_12D_Large(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New(500000, 600000, 700000, 800000, 900000, 1000000,
 			100000, 200000, 300000, 400000, 500000, 600000)
 	}
@@ -506,9 +508,8 @@ func BenchmarkCoords_3D(b *testing.B) {
 	addr := New(100, 200, 300)
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = addr.Coords()
 	}
 }
@@ -517,9 +518,8 @@ func BenchmarkCoords_12D(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = addr.Coords()
 	}
 }
@@ -529,9 +529,8 @@ func BenchmarkCoordsSlice_3D(b *testing.B) {
 	buf := make([]int, MaxDimensions)
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = addr.CoordsSlice(buf)
 	}
 }
@@ -541,9 +540,8 @@ func BenchmarkCoordsSlice_12D(b *testing.B) {
 	buf := make([]int, MaxDimensions)
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = addr.CoordsSlice(buf)
 	}
 }
@@ -551,9 +549,7 @@ func BenchmarkCoordsSlice_12D(b *testing.B) {
 func BenchmarkDims(b *testing.B) {
 	addr := New(1, 2, 3, 4, 5)
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = addr.Dims()
 	}
 }
@@ -562,9 +558,8 @@ func BenchmarkRoundTrip_3D(b *testing.B) {
 	coords := []int{100, 200, 300}
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		addr := New(coords...)
 		_, _ = addr.Coords()
 	}
@@ -574,9 +569,8 @@ func BenchmarkRoundTrip_12D(b *testing.B) {
 	coords := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		addr := New(coords...)
 		_, _ = addr.Coords()
 	}
@@ -593,20 +587,18 @@ func BenchmarkMapInsert_3D(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		mAddrs[addrs[i]] = float64(i)
 	}
 }
 
 func BenchmarkMapLookup_3D(b *testing.B) {
 	mAddrs := make(map[Addr]float64, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		mAddrs[New(i, i+1, i+2)] = float64(i)
 	}
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		idx := i % 10000
 		_ = mAddrs[New(idx, idx+1, idx+2)]
 	}
@@ -614,13 +606,11 @@ func BenchmarkMapLookup_3D(b *testing.B) {
 
 func BenchmarkMapLookup_12D(b *testing.B) {
 	mAddrs := make(map[Addr]float64, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		mAddrs[New(i, i+1, i+2, i+3, i+4, i+5, i+6, i+7, i+8, i+9, i+10, i+11)] = float64(i)
 	}
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		idx := i % 10000
 		_ = mAddrs[New(idx, idx+1, idx+2, idx+3, idx+4, idx+5,
 			idx+6, idx+7, idx+8, idx+9, idx+10, idx+11)]
@@ -629,14 +619,13 @@ func BenchmarkMapLookup_12D(b *testing.B) {
 
 func BenchmarkMapIteration_100k(b *testing.B) {
 	mAddrs := make(map[Addr]float64, 100000)
-	for i := 0; i < 100000; i++ {
+
+	for i := range 100000 {
 		v := i % (MaxCoordValue - 10)
 		mAddrs[New(v, v+1, v+2)] = float64(i)
 	}
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		var sum float64
 		for _, v := range mAddrs {
 			sum += v
@@ -676,7 +665,8 @@ func TestAppend_Basic(t *testing.T) {
 			if dims != len(testCase.want) {
 				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
-			for i := 0; i < dims; i++ {
+
+			for i := range dims {
 				if got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
@@ -725,7 +715,8 @@ func TestAppend_Chaining(t *testing.T) {
 	if dims != len(want) {
 		t.Fatalf("dims = %d, want %d", dims, len(want))
 	}
-	for i := 0; i < dims; i++ {
+
+	for i := range dims {
 		if got[i] != want[i] {
 			t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
 		}
@@ -1089,7 +1080,8 @@ func TestSlice_Basic(t *testing.T) {
 			if dims != len(testCase.want) {
 				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
-			for i := 0; i < dims; i++ {
+
+			for i := range dims {
 				if got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
@@ -1197,7 +1189,8 @@ func TestWith_Basic(t *testing.T) {
 			if dims != len(testCase.want) {
 				t.Fatalf("dims = %d, want %d", dims, len(testCase.want))
 			}
-			for i := 0; i < dims; i++ {
+
+			for i := range dims {
 				if got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
@@ -1276,7 +1269,8 @@ func TestWith_Chaining(t *testing.T) {
 	if dims != len(want) {
 		t.Fatalf("dims = %d, want %d", dims, len(want))
 	}
-	for i := 0; i < dims; i++ {
+
+	for i := range dims {
 		if got[i] != want[i] {
 			t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
 		}
@@ -1329,7 +1323,11 @@ func TestMethodInteractions(t *testing.T) {
 		if dims != len(want) {
 			t.Fatalf("dims = %d, want %d", dims, len(want))
 		}
-		for i := 0; i < dims; i++ {
+
+		for i := range dims {
+			if i >= len(got) {
+				t.Fatalf("index out of range")
+			}
 			if got[i] != want[i] {
 				t.Errorf("coord[%d] = %d, want %d", i, got[i], want[i])
 			}
@@ -1364,7 +1362,7 @@ func BenchmarkAppend_One(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.Append(4)
 	}
 }
@@ -1374,7 +1372,7 @@ func BenchmarkAt(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.At(2)
 	}
 }
@@ -1385,7 +1383,7 @@ func BenchmarkContains(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = aAddr.Contains(bAddr)
 	}
 }
@@ -1396,7 +1394,7 @@ func BenchmarkEqual(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = aAddr.Equal(bAddr)
 	}
 }
@@ -1407,7 +1405,7 @@ func BenchmarkInRange_3D(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.InRange(ranges...)
 	}
 }
@@ -1417,7 +1415,7 @@ func BenchmarkIsZero(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.IsZero()
 	}
 }
@@ -1427,7 +1425,7 @@ func BenchmarkSlice(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.Slice(1, 4)
 	}
 }
@@ -1437,7 +1435,7 @@ func BenchmarkWith(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_ = addr.With(2, 99)
 	}
 }
