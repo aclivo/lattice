@@ -884,6 +884,77 @@ func TestContains_LargeValues(t *testing.T) {
 }
 
 // ============================================================
+// InRange
+// ============================================================
+
+func TestInRange_Basic(t *testing.T) {
+	t.Parallel()
+
+	addr := New(10, 20, 30)
+
+	tests := []struct {
+		name   string
+		ranges [][2]int
+		want   bool
+	}{
+		{"all match", [][2]int{{5, 15}, {15, 25}, {25, 35}}, true},
+		{"first fails", [][2]int{{15, 20}, {15, 25}, {25, 35}}, false},
+		{"second fails", [][2]int{{5, 15}, {25, 30}, {25, 35}}, false},
+		{"third fails", [][2]int{{5, 15}, {15, 25}, {35, 40}}, false},
+		{"any wildcard", [][2]int{{-1, -1}, {-1, -1}, {-1, -1}}, true},
+		{"exact match", [][2]int{{10, 10}, {20, 20}, {30, 30}}, true},
+		{"partial ranges", [][2]int{{5, 15}}, true},
+		{"only min", [][2]int{{5, -1}, {15, -1}, {25, -1}}, true},
+		{"only max", [][2]int{{-1, 15}, {-1, 25}, {-1, 35}}, true},
+		{"min fails", [][2]int{{11, -1}}, false},
+		{"max fails", [][2]int{{-1, 9}}, false},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := addr.InRange(testCase.ranges...)
+			if got != testCase.want {
+				t.Errorf("InRange() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestInRange_FewerRangesThanDims(t *testing.T) {
+	t.Parallel()
+
+	addr := New(10, 20, 30)
+
+	// Only check first two dimensions
+	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}) {
+		t.Error("expected true with fewer ranges than dims")
+	}
+}
+
+func TestInRange_MoreRangesThanDims(t *testing.T) {
+	t.Parallel()
+
+	addr := New(10, 20)
+
+	// Extra ranges are ignored
+	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}, [2]int{25, 35}) {
+		t.Error("expected true when extra ranges are ignored")
+	}
+}
+
+func TestInRange_BoundaryValues(t *testing.T) {
+	t.Parallel()
+
+	addr := New(0, MaxCoordValue)
+
+	if !addr.InRange([2]int{0, 0}, [2]int{MaxCoordValue, MaxCoordValue}) {
+		t.Error("expected boundary values to match exactly")
+	}
+}
+
+// ============================================================
 // IsZero
 // ============================================================
 
