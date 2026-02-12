@@ -23,6 +23,9 @@ const (
 	// dimsBits is the number of bits used to store the number of dimensions.
 	dimsBits = 4
 
+	// dimsMask selects the dimension count bits from the header word.
+	dimsMask = 0xF
+
 	// bitsPerWord is the number of bits in a uint64 word.
 	bitsPerWord = 64
 )
@@ -65,7 +68,7 @@ func New(coords ...int) Addr {
 
 // Dims returns the number of dimensions in this address.
 func (a Addr) Dims() int {
-	v := a[0] & 0xF
+	v := a[0] & dimsMask
 	if v > MaxDimensions {
 		return MaxDimensions
 	}
