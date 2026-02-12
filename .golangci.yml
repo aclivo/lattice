@@ -1,0 +1,7 @@
+version: "2"
+linters:
+  settings:
+    testpackage:
+      skip-regexp: (lattice_test\.go)
+    funlen:
+      lines: 80

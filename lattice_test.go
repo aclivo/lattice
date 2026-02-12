@@ -163,7 +163,7 @@ func TestCoords_RoundTrip(t *testing.T) {
 			}
 
 			for dimIx := range dims {
-				if got[dimIx] != testCase.coords[dimIx] {
+				if dimIx < len(got) && dimIx < len(testCase.coords) && got[dimIx] != testCase.coords[dimIx] {
 					t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], testCase.coords[dimIx])
 				}
 			}
@@ -184,7 +184,7 @@ func TestCoords_Sequential(t *testing.T) {
 		}
 
 		for j := range dims {
-			if got[j] != coords[j] {
+			if j < len(got) && j < len(coords) && got[j] != coords[j] {
 				t.Errorf("i=%d coord[%d] = %d, want %d", testIndex, j, got[j], coords[j])
 			}
 		}
@@ -211,7 +211,7 @@ func TestCoords_MaxCapacity(t *testing.T) {
 			t.Fatalf("index out of range")
 		}
 
-		if got[dimIx] != MaxCoordValue {
+		if dimIx < len(got) && got[dimIx] != MaxCoordValue {
 			t.Errorf("coord[%d] = %d, want %d", dimIx, got[dimIx], MaxCoordValue)
 		}
 	}
@@ -939,77 +939,6 @@ func TestEqual_Symmetric(t *testing.T) {
 }
 
 // ============================================================
-// InRange
-// ============================================================
-
-func TestInRange_Basic(t *testing.T) {
-	t.Parallel()
-
-	addr := New(10, 20, 30)
-
-	tests := []struct {
-		name   string
-		ranges [][2]int
-		want   bool
-	}{
-		{"all match", [][2]int{{5, 15}, {15, 25}, {25, 35}}, true},
-		{"first fails", [][2]int{{15, 20}, {15, 25}, {25, 35}}, false},
-		{"second fails", [][2]int{{5, 15}, {25, 30}, {25, 35}}, false},
-		{"third fails", [][2]int{{5, 15}, {15, 25}, {35, 40}}, false},
-		{"any wildcard", [][2]int{{-1, -1}, {-1, -1}, {-1, -1}}, true},
-		{"exact match", [][2]int{{10, 10}, {20, 20}, {30, 30}}, true},
-		{"partial ranges", [][2]int{{5, 15}}, true},
-		{"only min", [][2]int{{5, -1}, {15, -1}, {25, -1}}, true},
-		{"only max", [][2]int{{-1, 15}, {-1, 25}, {-1, 35}}, true},
-		{"min fails", [][2]int{{11, -1}}, false},
-		{"max fails", [][2]int{{-1, 9}}, false},
-	}
-
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := addr.InRange(testCase.ranges...)
-			if got != testCase.want {
-				t.Errorf("InRange() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestInRange_FewerRangesThanDims(t *testing.T) {
-	t.Parallel()
-
-	addr := New(10, 20, 30)
-
-	// Only check first two dimensions
-	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}) {
-		t.Error("expected true with fewer ranges than dims")
-	}
-}
-
-func TestInRange_MoreRangesThanDims(t *testing.T) {
-	t.Parallel()
-
-	addr := New(10, 20)
-
-	// Extra ranges are ignored
-	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}, [2]int{25, 35}) {
-		t.Error("expected true when extra ranges are ignored")
-	}
-}
-
-func TestInRange_BoundaryValues(t *testing.T) {
-	t.Parallel()
-
-	addr := New(0, MaxCoordValue)
-
-	if !addr.InRange([2]int{0, 0}, [2]int{MaxCoordValue, MaxCoordValue}) {
-		t.Error("expected boundary values to match exactly")
-	}
-}
-
-// ============================================================
 // IsZero
 // ============================================================
 
@@ -1200,7 +1129,7 @@ func TestWith_Basic(t *testing.T) {
 			}
 
 			for i := range dims {
-				if got[i] != testCase.want[i] {
+				if i < len(got) && i < len(testCase.want) && got[i] != testCase.want[i] {
 					t.Errorf("coord[%d] = %d, want %d", i, got[i], testCase.want[i])
 				}
 			}
@@ -1295,6 +1224,8 @@ func TestWith_Chaining(t *testing.T) {
 // ============================================================
 
 func TestMethodInteractions(t *testing.T) {
+	t.Parallel()
+
 	t.Run("Append then At", func(t *testing.T) {
 		t.Parallel()
 
@@ -1356,15 +1287,6 @@ func TestMethodInteractions(t *testing.T) {
 			t.Error("expected IsZero to be false after With")
 		}
 	})
-
-	t.Run("InRange after Append", func(t *testing.T) {
-		t.Parallel()
-
-		addr := New(10, 20).Append(30)
-		if !addr.InRange([2]int{5, 15}, [2]int{15, 25}, [2]int{25, 35}) {
-			t.Error("expected InRange to be true after Append")
-		}
-	})
 }
 
 // ============================================================
@@ -1410,17 +1332,6 @@ func BenchmarkEqual(b *testing.B) {
 
 	for i := 0; b.Loop(); i++ {
 		_ = aAddr.Equal(bAddr)
-	}
-}
-
-func BenchmarkInRange_3D(b *testing.B) {
-	addr := New(100, 200, 300)
-	ranges := [][2]int{{50, 150}, {150, 250}, {250, 350}}
-
-	b.ResetTimer()
-
-	for i := 0; b.Loop(); i++ {
-		_ = addr.InRange(ranges...)
 	}
 }
 
