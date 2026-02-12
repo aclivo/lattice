@@ -1337,7 +1337,7 @@ func TestMethodInteractions(t *testing.T) {
 		}
 
 		for dimIx := range dims {
-			if dimIx >= len(got) {
+			if dimIx >= len(got) || dimIx >= len(want) {
 				t.Fatalf("index out of range")
 			}
 

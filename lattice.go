@@ -187,7 +187,7 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 			return false
 		}
 
-		if len(ran) > 1 && ran[1] != -1 && aCoords[index] > ran[1] {
+		if len(ran) > 1 && ran[1] != -1 && index < len(aCoords) && aCoords[index] > ran[1] {
 			return false
 		}
 	}
@@ -199,6 +199,9 @@ func (a Addr) InRange(ranges ...[2]int) bool {
 func (a Addr) IsZero() bool {
 	coords, dims := a.Coords()
 	for i := range dims {
+		if i >= len(coords) {
+			return false
+		}
 		if coords[i] != 0 {
 			return false
 		}
