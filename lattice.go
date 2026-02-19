@@ -74,8 +74,8 @@ func (a Addr) Dims() int {
 // Coords decodes and returns coordinates as a stack-allocated array.
 // Use dims to know how many elements are valid.
 // Zero allocations.
-func (a Addr) Coords() ([MaxDimensions]int, int) {
-	var coords [MaxDimensions]int
+func (a Addr) Coords() (Buffer, int) {
+	var coords Buffer
 
 	dims := a.Dims()
 
@@ -106,7 +106,7 @@ func (a Addr) CoordsSlice(buf []int) []int {
 	buf = buf[:dims]
 
 	for i := range dims {
-		buf[i] = coords[i] //nolint:gosec // coords is [MaxDimensions]int, dims <= MaxDimensions
+		buf[i] = coords[i] //nolint:gosec // coords is Buffer, dims <= MaxDimensions
 	}
 
 	return buf
@@ -161,22 +161,24 @@ func (a Addr) Contains(bAddr Addr) bool {
 }
 
 // InRange checks if this address falls within the given coordinate ranges.
-// ranges: [2]int{min, max} per dimension, use {-1,-1} for "any".
-func (a Addr) InRange(ranges ...[2]int) bool {
+// ranges: each element is [min, max] for the corresponding dimension.
+// A value of -1 for min or max means no bound in that direction.
+// e.g. Addr{10,20,30}.InRange({5,15}, {15,25}, {25,35}) → true.
+func (a Addr) InRange(ranges ...AddrRange) bool {
 	aCoords, dims := a.Coords()
 
-	for index, ran := range ranges {
+	for index, _range := range ranges {
 		if index >= dims {
 			break
 		}
 
 		coord := aCoords[index]
 
-		if ran[0] != -1 && coord < ran[0] { //nolint:gosec // ran is [2]int, indexes 0 and 1 always valid
+		if _range[0] != -1 && coord < _range[0] { //nolint:gosec // _range is [2]int, indexes 0 and 1 always valid
 			return false
 		}
 
-		if ran[1] != -1 && coord > ran[1] { //nolint:gosec // ran is [2]int, indexes 0 and 1 always valid
+		if _range[1] != -1 && coord > _range[1] { //nolint:gosec // _range is [2]int, indexes 0 and 1 always valid
 			return false
 		}
 	}
@@ -233,7 +235,10 @@ func (a Addr) With(dimIdx int, value int) Addr {
 
 // String returns a human-readable representation of the address.
 func (a Addr) String() string {
-	var buf [MaxDimensions]int
+	var buf Buffer
 
 	return fmt.Sprintf("Addr%v", a.CoordsSlice(buf[:]))
 }
+
+type AddrRange [2]int
+type Buffer [MaxDimensions]int

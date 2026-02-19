@@ -894,20 +894,20 @@ func TestInRange_Basic(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		ranges [][2]int
+		ranges []AddrRange
 		want   bool
 	}{
-		{"all match", [][2]int{{5, 15}, {15, 25}, {25, 35}}, true},
-		{"first fails", [][2]int{{15, 20}, {15, 25}, {25, 35}}, false},
-		{"second fails", [][2]int{{5, 15}, {25, 30}, {25, 35}}, false},
-		{"third fails", [][2]int{{5, 15}, {15, 25}, {35, 40}}, false},
-		{"any wildcard", [][2]int{{-1, -1}, {-1, -1}, {-1, -1}}, true},
-		{"exact match", [][2]int{{10, 10}, {20, 20}, {30, 30}}, true},
-		{"partial ranges", [][2]int{{5, 15}}, true},
-		{"only min", [][2]int{{5, -1}, {15, -1}, {25, -1}}, true},
-		{"only max", [][2]int{{-1, 15}, {-1, 25}, {-1, 35}}, true},
-		{"min fails", [][2]int{{11, -1}}, false},
-		{"max fails", [][2]int{{-1, 9}}, false},
+		{"all match", []AddrRange{{5, 15}, {15, 25}, {25, 35}}, true},
+		{"first fails", []AddrRange{{15, 20}, {15, 25}, {25, 35}}, false},
+		{"second fails", []AddrRange{{5, 15}, {25, 30}, {25, 35}}, false},
+		{"third fails", []AddrRange{{5, 15}, {15, 25}, {35, 40}}, false},
+		{"any wildcard", []AddrRange{{-1, -1}, {-1, -1}, {-1, -1}}, true},
+		{"exact match", []AddrRange{{10, 10}, {20, 20}, {30, 30}}, true},
+		{"partial ranges", []AddrRange{{5, 15}}, true},
+		{"only min", []AddrRange{{5, -1}, {15, -1}, {25, -1}}, true},
+		{"only max", []AddrRange{{-1, 15}, {-1, 25}, {-1, 35}}, true},
+		{"min fails", []AddrRange{{11, -1}}, false},
+		{"max fails", []AddrRange{{-1, 9}}, false},
 	}
 
 	for _, testCase := range tests {
@@ -928,7 +928,7 @@ func TestInRange_FewerRangesThanDims(t *testing.T) {
 	addr := New(10, 20, 30)
 
 	// Only check first two dimensions
-	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}) {
+	if !addr.InRange(AddrRange{5, 15}, AddrRange{15, 25}) {
 		t.Error("expected true with fewer ranges than dims")
 	}
 }
@@ -939,7 +939,7 @@ func TestInRange_MoreRangesThanDims(t *testing.T) {
 	addr := New(10, 20)
 
 	// Extra ranges are ignored
-	if !addr.InRange([2]int{5, 15}, [2]int{15, 25}, [2]int{25, 35}) {
+	if !addr.InRange(AddrRange{5, 15}, AddrRange{15, 25}, AddrRange{25, 35}) {
 		t.Error("expected true when extra ranges are ignored")
 	}
 }
@@ -949,7 +949,7 @@ func TestInRange_BoundaryValues(t *testing.T) {
 
 	addr := New(0, MaxCoordValue)
 
-	if !addr.InRange([2]int{0, 0}, [2]int{MaxCoordValue, MaxCoordValue}) {
+	if !addr.InRange(AddrRange{0, 0}, AddrRange{MaxCoordValue, MaxCoordValue}) {
 		t.Error("expected boundary values to match exactly")
 	}
 }
